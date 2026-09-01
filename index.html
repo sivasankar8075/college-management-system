@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description"
+        content="College Management System - A centralized platform for managing students, faculty, academics, attendance, fees and administration.">
+    <meta name="author" content="CampusCore">
+
+    <title>CampusCore — College Management System</title>
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- =========================================
+         APPLICATION ROOT
+    ========================================== -->
+    <div id="app">
+
+        <!-- =========================================
+             LOGIN PAGE
+        ========================================== -->
+        <section id="loginPage" class="login-page">
+
+            <!-- Left Side: Brand / Introduction -->
+            <div class="login-intro">
+
+                <div class="brand">
+                    <div class="brand-logo">C</div>
+                    <div class="brand-text">
+                        <h2>CampusCore</h2>
+                        <span>College Management System</span>
+                    </div>
+                </div>
+
+                <div class="intro-content">
+                    <span class="intro-label">DIGITAL CAMPUS PLATFORM</span>
+                    <h1>
+                        Manage your<br>
+                        college <span>smarter.</span>
+                    </h1>
+                    <p>
+                        A centralized platform for managing students,
+                        faculty, courses, attendance, internal marks,
+                        fees and institutional communication.
+                    </p>
+
+                    <!-- Statistics -->
+                    <div class="intro-statistics">
+                        <div class="stat-item">
+                            <strong>2,480+</strong>
+                            <span>Students</span>
+                        </div>
+                        <div class="stat-item">
+                            <strong>128</strong>
+                            <span>Faculty</span>
+                        </div>
+                        <div class="stat-item">
+                            <strong>46</strong>
+                            <span>Courses</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="intro-footer">
+                    <span>Java</span>
+                    <span>•</span>
+                    <span>MySQL</span>
+                    <span>•</span>
+                    <span>JDBC</span>
+                    <span>•</span>
+                    <span>OOP</span>
+                </div>
+
+            </div>
+
+            <!-- Right Side: Login Form -->
+            <div class="login-container">
+
+                <div class="login-card">
+
+                    <!-- Mobile Brand -->
+                    <div class="mobile-brand">
+                        <div class="brand-logo">C</div>
+                        <div class="brand-text">
+                            <h2>CampusCore</h2>
+                            <span>CMS</span>
+                        </div>
+                    </div>
+
+                    <!-- Heading -->
+                    <div class="login-heading">
+                        <span class="section-label">WELCOME BACK</span>
+                        <h2>Sign in to your portal</h2>
+                        <p>Select your role and enter your credentials to continue.</p>
+                    </div>
+
+                    <!-- Role Selection -->
+                    <div class="role-selector">
+                        <button type="button" class="role-button active" data-role="admin">
+                            <span class="role-icon">A</span>
+                            <span>Admin</span>
+                        </button>
+                        <button type="button" class="role-button" data-role="faculty">
+                            <span class="role-icon">F</span>
+                            <span>Faculty</span>
+                        </button>
+                        <button type="button" class="role-button" data-role="student">
+                            <span class="role-icon">S</span>
+                            <span>Student</span>
+                        </button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="loginForm">
+
+                        <!-- User ID -->
+                        <div class="form-group">
+                            <label for="userId">User ID</label>
+                            <input
+                                type="text"
+                                id="userId"
+                                name="userId"
+                                placeholder="Enter your user ID"
+                                autocomplete="username"
+                                required>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="password-wrapper">
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    placeholder="Enter your password"
+                                    autocomplete="current-password"
+                                    required>
+                                <button
+                                    type="button"
+                                    id="togglePassword"
+                                    class="password-toggle"
+                                    aria-label="Show or hide password">
+                                    Show
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Remember / Forgot -->
+                        <div class="login-options">
+                            <label class="remember-option">
+                                <input type="checkbox" id="rememberMe">
+                                <span>Remember me</span>
+                            </label>
+                            <a href="#" id="forgotPassword">Forgot password?</a>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="login-button">
+                            <span>Sign in</span>
+                            <span class="login-arrow">→</span>
+                        </button>
+
+                    </form>
+
+                    <!-- Register Option -->
+                    <div class="register-option">
+                        <span>Don't have an account?</span>
+                        <button type="button" id="registerButton">Register</button>
+                    </div>
+
+                    <!-- Demo Credentials Info -->
+                    <div class="demo-information">
+                        <strong>Demo access</strong>
+                        <p>Admin: ADM001 / admin123</p>
+                        <p>Faculty: FAC101 / faculty123</p>
+                        <p>Student: STU202402 / student123</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- =========================================
+             DASHBOARD ROOT
+             (Dynamically populated via app.js)
+        ========================================== -->
+        <section id="dashboardPage" class="dashboard-page hidden"></section>
+
+    </div>
+
+    <!-- Application Script -->
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>
