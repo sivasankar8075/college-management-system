@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
 COPY . .
 RUN mkdir -p backend/bin && javac -cp "backend/lib/*" -d backend/bin $(find backend/src -name "*.java")
