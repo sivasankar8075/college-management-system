@@ -2,6 +2,9 @@
    CAMPUSCORE - COLLEGE MANAGEMENT SYSTEM
    Full Production JavaScript with REST API Integration & Parent Portal
 ===================================================== */
+if (localStorage.getItem("theme_preference") === "dark") {
+    document.body.classList.add("dark-theme");
+}
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -9,7 +12,8 @@ const appState = {
     selectedRole: "admin",
     currentUser: null,
     isLoggedIn: false,
-    currentPage: "dashboard"
+    currentPage: "dashboard",
+    pageHistory: [] // മുൻ പേജുകൾ സൂക്ഷിക്കാൻ
 };
 
 let students = [];
@@ -135,6 +139,7 @@ function logoutUser() {
     appState.currentUser = null;
     appState.isLoggedIn = false;
     appState.currentPage = "dashboard";
+    appState.pageHistory = [];
 
     if (dashboardPage) dashboardPage.classList.add("hidden");
     if (loginPage) loginPage.classList.remove("hidden");
@@ -281,10 +286,15 @@ function backToLogin() {
 /* =====================================================
    4. DASHBOARD SHELL & NAVIGATION
 ===================================================== */
-
 function renderDashboard() {
     if (!dashboardPage) return;
-    const user = appState.currentUser || { name: "Administrator", role: "admin", initials: "AD" };
+    const user = appState.currentUser || { 
+        userId: "ADM001", 
+        name: "Administrator", 
+        role: "admin", 
+        initials: "AD" 
+    };
+    const savedPic = localStorage.getItem(`profile_pic_${user.userId}`) || "";
 
     dashboardPage.innerHTML = `
         <aside class="dashboard-sidebar">
@@ -314,16 +324,62 @@ function renderDashboard() {
 
         <main class="dashboard-main">
             <header class="dashboard-topbar">
-                <div class="dashboard-heading">
-                    <span class="section-label">${appState.selectedRole.toUpperCase()}</span>
-                    <h2 id="dashboardPageTitle">${getPageTitle(appState.currentPage)}</h2>
-                </div>
-                <div class="topbar-user">
-                    <button type="button" class="notification-button" id="notificationButton">
-                        ♧ <span class="notification-dot"></span>
+                <div class="topbar-left-actions">
+                    <button type="button" class="back-nav-btn" id="navBackButton" title="Go to previous page" style="visibility:hidden;">
+                        ← Back
                     </button>
+                    <div class="dashboard-heading">
+                        <span class="section-label">${appState.selectedRole.toUpperCase()}</span>
+                        <h2 id="dashboardPageTitle">${getPageTitle(appState.currentPage)}</h2>
+                    </div>
+                </div>
+
+                <div class="topbar-user">
+                    <div class="notification-wrapper">
+                        <button type="button" class="notification-button" id="notificationButton">
+                            ♧ <span class="notification-dot"></span>
+                        </button>
+                        <div class="notification-dropdown hidden" id="notificationDropdown">
+                            <div class="notif-header">
+                                <h4>Notifications</h4>
+                                <span class="notif-badge">3 New</span>
+                            </div>
+                            <div class="notif-body">
+                                <div class="notif-item unread">
+                                    <span class="notif-icon">📅</span>
+                                    <div class="notif-text">
+                                        <strong>Semester Exams Schedule</strong>
+                                        <p>Internal examination dates published for all departments.</p>
+                                        <small>10 mins ago</small>
+                                    </div>
+                                </div>
+                                <div class="notif-item unread">
+                                    <span class="notif-icon">💳</span>
+                                    <div class="notif-text">
+                                        <strong>Fee Payment Reminder</strong>
+                                        <p>Last date for semester fee submission is approaching.</p>
+                                        <small>2 hours ago</small>
+                                    </div>
+                                </div>
+                                <div class="notif-item">
+                                    <span class="notif-icon">📢</span>
+                                    <div class="notif-text">
+                                        <strong>Campus Placement Drive</strong>
+                                        <p>Registration open for final year technical batch.</p>
+                                        <small>Yesterday</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="notif-footer">
+                                <button type="button" onclick="navigateTo('announcements')">View All Announcements →</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="user-profile">
-                        <div class="user-avatar">${user.initials || "U"}</div>
+                        <div class="user-avatar">
+                            ${savedPic ? `<img src="${savedPic}" class="profile-avatar-img" alt="Profile">` : (user.initials || "U")}
+                        </div>
                         <div class="user-details">
                             <strong>${user.name}</strong>
                             <span>${user.role}</span>
@@ -331,13 +387,13 @@ function renderDashboard() {
                     </div>
                 </div>
             </header>
+
             <section class="dashboard-content" id="dashboardContent"></section>
         </main>
     `;
 
     initializeDashboardEvents();
 }
-
 function getPageTitle(page) {
     const titles = {
         dashboard: "Dashboard",
@@ -440,11 +496,27 @@ function initializeDashboardEvents() {
     document.getElementById("logoutButton")?.addEventListener("click", logoutUser);
     document.getElementById("notificationButton")?.addEventListener("click", showNotifications);
     renderCurrentPage();
+
+    document.getElementById("navBackButton")?.addEventListener("click", () => {
+    if (appState.pageHistory.length > 0) {
+        const previousPage = appState.pageHistory.pop();
+        navigateTo(previousPage, true);
+    }
+});
 }
 
-async function navigateTo(page) {
+async function navigateTo(page, isBack = false) {
+    if (!isBack && appState.currentPage !== page) {
+        appState.pageHistory.push(appState.currentPage);
+    }
     appState.currentPage = page;
     updateActiveNavigation();
+    
+    // Back ബട്ടൺ ഡാഷ്‌ബോർഡിൽ നിൽക്കുമ്പോൾ ഹൈഡ് ചെയ്യുക/ഡിസേബിൾ ചെയ്യുക
+    const backBtn = document.getElementById("navBackButton");
+    if (backBtn) {
+        backBtn.style.visibility = appState.pageHistory.length > 0 ? "visible" : "hidden";
+    }
 
     if (page === "dashboard") return await renderRoleDashboard();
     if (page === "students") return await showStudentsPage();
@@ -638,17 +710,13 @@ async function renderRoleDashboard() {
 /* =====================================================
    6. STUDENTS DIRECTORY
 ===================================================== */
-
 async function showStudentsPage() {
-    try {
-        const res = await fetch(`${API_BASE_URL}/students`);
-        if (res.ok) students = await res.json();
-    } catch (e) {
-        console.error("Failed to load students:", e);
-    }
-
     const content = document.getElementById("dashboardContent");
     if (!content) return;
+
+    // Admin-നും Faculty-ക്കും എഡിറ്റ്/ആഡ് ചെയ്യാനുള്ള അനുവാദം നൽകുന്നു
+    const canManageStudents = appState.selectedRole === "admin" || appState.selectedRole === "faculty";
+    const students = await fetchStudents();
 
     content.innerHTML = `
         <div class="dashboard-welcome">
@@ -657,40 +725,82 @@ async function showStudentsPage() {
                 <h1>Student Management</h1>
                 <p>Manage student profiles, admissions and academic information.</p>
             </div>
-            ${appState.selectedRole === "admin" ? `<button type="button" class="dashboard-button dashboard-button-primary" id="addStudentButton">+ Add Student</button>` : ""}
-        </div>
-
-        <div class="faculty-summary">
-            <div class="faculty-summary-card"><span>TOTAL STUDENTS</span><strong>${students.length}</strong></div>
-            <div class="faculty-summary-card"><span>CS DEPT</span><strong>${students.filter(s => s.department === "Computer Science").length}</strong></div>
-            <div class="faculty-summary-card"><span>ELECTRONICS</span><strong>${students.filter(s => s.department === "Electronics").length}</strong></div>
-            <div class="faculty-summary-card"><span>AVG ATTENDANCE</span><strong>${getAverageAttendance()}%</strong></div>
+            ${canManageStudents ? `
+                <button type="button" class="dashboard-button dashboard-button-primary" id="addStudentBtn">
+                    + Add Student
+                </button>
+            ` : ""}
         </div>
 
         <div class="dashboard-card">
-            <div class="page-toolbar">
-                <div class="page-toolbar-left">
-                    <div class="search-box">
-                        <span class="search-icon">⌕</span>
-                        <input type="search" id="studentSearch" placeholder="Search student or ID...">
-                    </div>
-                    <select class="filter-select" id="studentDepartmentFilter">
-                        <option value="all">All Departments</option>
-                        <option value="Computer Science">Computer Science</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Commerce">Commerce</option>
-                        <option value="Mathematics">Mathematics</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="studentTableContainer" class="student-table-wrapper">
-                ${renderStudentTable(students)}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>STUDENT</th>
+                            <th>ID</th>
+                            <th>DEPARTMENT</th>
+                            <th>SEMESTER</th>
+                            <th>ATTENDANCE</th>
+                            ${canManageStudents ? `<th>ACTIONS</th>` : ""}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${students.map(s => `
+                            <tr>
+                                <td>
+                                    <div class="table-user-cell">
+                                        <div class="user-avatar-sm">${s.name.charAt(0)}</div>
+                                        <div>
+                                            <strong>${s.name}</strong>
+                                            <span>${s.email}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${s.studentId}</td>
+                                <td>${s.department}</td>
+                                <td>Semester ${s.semester}</td>
+                                <td><strong>${s.attendancePercentage}%</strong></td>
+                                ${canManageStudents ? `
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit-student-btn" data-id="${s.studentId}" title="Edit Student">✏️</button>
+                                            ${appState.selectedRole === "admin" ? `<button class="action-btn delete-student-btn" data-id="${s.studentId}" title="Delete Student">🗑️</button>` : ""}
+                                        </div>
+                                    </td>
+                                ` : ""}
+                            </tr>
+                        `).join("")}
+                    </tbody>
+                </table>
             </div>
         </div>
     `;
 
-    initializeStudentManagement();
+    // Add Student Modal ഇവന്റ്
+    if (canManageStudents) {
+        document.getElementById("addStudentBtn")?.addEventListener("click", () => openStudentModal());
+
+        document.querySelectorAll(".edit-student-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const sId = btn.getAttribute("data-id");
+                const student = students.find(s => s.studentId === sId);
+                if (student) openStudentModal(student);
+            });
+        });
+
+        if (appState.selectedRole === "admin") {
+            document.querySelectorAll(".delete-student-btn").forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    const sId = btn.getAttribute("data-id");
+                    if (confirm(`Are you sure you want to delete student ${sId}?`)) {
+                        await deleteStudent(sId);
+                        showStudentsPage();
+                    }
+                });
+            });
+        }
+    }
 }
 
 function renderStudentTable(data) {
@@ -767,6 +877,82 @@ function initializeStudentManagement() {
     if (addButton) addButton.addEventListener("click", () => openStudentModal());
 
     initializeStudentActions();
+}
+
+function openStudentModal(student = null) {
+    const isEdit = !!student;
+    const modalHtml = `
+        <div class="modal-overlay" id="studentModal">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h3>${isEdit ? "Edit Student Details" : "Add New Student"}</h3>
+                    <button type="button" class="modal-close" onclick="closeStudentModal()">✕</button>
+                </div>
+                <form id="studentForm">
+                    <div class="form-group">
+                        <label>Student ID</label>
+                        <input type="text" id="mStudentId" value="${student ? student.studentId : ""}" ${isEdit ? "disabled style='background:#f0f3f6;'" : "required"}>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="mStudentName" value="${student ? student.name : ""}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="mStudentEmail" value="${student ? student.email : ""}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="mStudentDept" required>
+                            <option value="Computer Science" ${student && student.department === "Computer Science" ? "selected" : ""}>Computer Science</option>
+                            <option value="Electronics" ${student && student.department === "Electronics" ? "selected" : ""}>Electronics</option>
+                            <option value="Mechanical" ${student && student.department === "Mechanical" ? "selected" : ""}>Mechanical</option>
+                            <option value="Civil" ${student && student.department === "Civil" ? "selected" : ""}>Civil</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Semester</label>
+                        <input type="number" id="mStudentSem" min="1" max="8" value="${student ? student.semester : 1}" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="modal-button cancel" onclick="closeStudentModal()">Cancel</button>
+                        <button type="submit" class="modal-button save">${isEdit ? "Save Changes" : "Add Student"}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+    document.getElementById("studentForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const payload = {
+            studentId: isEdit ? student.studentId : document.getElementById("mStudentId").value.trim(),
+            name: document.getElementById("mStudentName").value.trim(),
+            email: document.getElementById("mStudentEmail").value.trim(),
+            department: document.getElementById("mStudentDept").value,
+            semester: parseInt(document.getElementById("mStudentSem").value)
+        };
+
+        const res = await fetch(`${API_BASE_URL}/students${isEdit ? `/${payload.studentId}` : ""}`, {
+            method: isEdit ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            showMessage(isEdit ? "Student details updated successfully!" : "Student added successfully!", "success");
+            closeStudentModal();
+            showStudentsPage();
+        } else {
+            showMessage("Failed to save student details.", "error");
+        }
+    });
+}
+
+function closeStudentModal() {
+    document.getElementById("studentModal")?.remove();
 }
 
 function initializeStudentActions() {
@@ -1823,11 +2009,18 @@ async function showReportsPage() {
         </div>
     `;
 }
-
-function showProfilePage() {
+function showProfilePage(isEditing = false) {
     const content = document.getElementById("dashboardContent");
     if (!content) return;
-    const user = appState.currentUser || { name: "Administrator", role: appState.selectedRole, email: "user@campuscore.edu" };
+
+    const user = appState.currentUser || { 
+        userId: "PAR301", 
+        name: "User", 
+        role: appState.selectedRole, 
+        email: "user@campuscore.edu",
+        phone: "9876543210"
+    };
+    const savedPic = localStorage.getItem(`profile_pic_${user.userId}`) || "";
 
     content.innerHTML = `
         <div class="dashboard-welcome">
@@ -1835,48 +2028,239 @@ function showProfilePage() {
                 <span class="section-label">ACCOUNT</span>
                 <h1>My Profile</h1>
             </div>
+            ${!isEditing ? `
+                <button type="button" class="dashboard-button dashboard-button-primary" id="editProfileBtn">
+                    ✎ Edit Profile
+                </button>
+            ` : ""}
         </div>
+
         <div class="dashboard-card" style="max-width:550px;">
-            <div class="faculty-profile" style="margin-bottom:20px;">
-                <div class="faculty-profile-avatar">${user.initials || "U"}</div>
+            <div class="faculty-profile" style="margin-bottom:24px;">
+                <div class="profile-pic-container">
+                    <div class="faculty-profile-avatar" id="profileAvatarDisplay">
+                        ${savedPic ? `<img src="${savedPic}" class="profile-avatar-img" alt="Profile">` : (user.initials || "U")}
+                    </div>
+                    <label for="profileImageInput" class="profile-pic-badge" title="Change profile picture">📷</label>
+                    <input type="file" id="profileImageInput" accept="image/*" style="display:none;">
+                </div>
                 <div>
                     <h3>${user.name}</h3>
-                    <p>${user.role}</p>
+                    <p style="color:#6d7c8a; font-size:12px; margin-top:2px;">${user.role.toUpperCase()}</p>
+                    <small style="color:#929ca6; font-size:10px;">Click camera icon to change photo</small>
                 </div>
             </div>
-            <div class="profile-info-list">
-                <div class="profile-info-row"><span>User ID</span><strong>${user.userId || "PAR301"}</strong></div>
-                <div class="profile-info-row"><span>Email</span><strong>${user.email || "parent@campuscore.edu"}</strong></div>
-                <div class="profile-info-row"><span>Role</span><strong>${user.role}</strong></div>
-                ${user.wardId ? `<div class="profile-info-row"><span>Linked Ward ID</span><strong>${user.wardId}</strong></div>` : ""}
-            </div>
+
+            ${isEditing ? `
+                <form id="editProfileForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="editProfileName" value="${user.name}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="editProfileEmail" value="${user.email || ""}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="editProfilePhone" value="${user.phone || ""}" placeholder="Enter phone number">
+                    </div>
+                    <div class="form-group">
+                        <label>User ID (Read Only)</label>
+                        <input type="text" value="${user.userId}" disabled style="background:#f0f3f6; cursor:not-allowed;">
+                    </div>
+                    <div class="modal-actions" style="margin-top:15px; padding-top:12px;">
+                        <button type="button" class="modal-button cancel" id="cancelProfileEdit">Cancel</button>
+                        <button type="submit" class="modal-button save">Save Changes</button>
+                    </div>
+                </form>
+            ` : `
+                <div class="profile-info-list">
+                    <div class="profile-info-row"><span>User ID</span><strong>${user.userId || "PAR301"}</strong></div>
+                    <div class="profile-info-row"><span>Email</span><strong>${user.email || "user@campuscore.edu"}</strong></div>
+                    <div class="profile-info-row"><span>Phone</span><strong>${user.phone || "Not provided"}</strong></div>
+                    <div class="profile-info-row"><span>Role</span><strong>${user.role}</strong></div>
+                    ${user.wardId ? `<div class="profile-info-row"><span>Linked Ward ID</span><strong>${user.wardId}</strong></div>` : ""}
+                </div>
+            `}
         </div>
     `;
-}
 
+    // 1. ഫോട്ടോ മാറ്റാനുള്ള ഇവന്റ്
+    document.getElementById("profileImageInput")?.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const base64Image = event.target.result;
+                localStorage.setItem(`profile_pic_${user.userId}`, base64Image);
+                
+                const avatar = document.getElementById("profileAvatarDisplay");
+                if (avatar) avatar.innerHTML = `<img src="${base64Image}" class="profile-avatar-img" alt="Profile">`;
+                
+                const topbarAvatar = document.querySelector(".topbar-user .user-avatar");
+                if (topbarAvatar) topbarAvatar.innerHTML = `<img src="${base64Image}" class="profile-avatar-img" alt="Profile">`;
+
+                showMessage("Profile picture updated successfully!", "success");
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 2. എഡിറ്റ് ബട്ടൺ ക്ലിക്ക് ചെയ്യുമ്പോൾ
+    document.getElementById("editProfileBtn")?.addEventListener("click", () => showProfilePage(true));
+
+    // 3. കാൻസൽ അടിക്കുമ്പോൾ സാധാരണ വ്യൂവിലേക്ക്
+    document.getElementById("cancelProfileEdit")?.addEventListener("click", () => showProfilePage(false));
+
+    // 4. ഫോം സബ്മിറ്റ് ചെയ്യുമ്പോൾ വിവരങ്ങൾ സേവ് ആകാൻ
+    document.getElementById("editProfileForm")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const updatedName = document.getElementById("editProfileName").value.trim();
+        const updatedEmail = document.getElementById("editProfileEmail").value.trim();
+        const updatedPhone = document.getElementById("editProfilePhone").value.trim();
+
+        // യൂസർ സ്റ്റേറ്റ് അപ്‌ഡേറ്റ് ചെയ്യുന്നു
+        appState.currentUser.name = updatedName;
+        appState.currentUser.email = updatedEmail;
+        appState.currentUser.phone = updatedPhone;
+        appState.currentUser.initials = getInitials(updatedName);
+
+        // ടോപ്‌ബാറിലെ പേര് തത്സമയം മാറ്റുന്നു
+        const topbarName = document.querySelector(".user-details strong");
+        if (topbarName) topbarName.textContent = updatedName;
+
+        showMessage("Profile details updated successfully!", "success");
+        showProfilePage(false);
+    });
+}
 function showSettingsPage() {
     const content = document.getElementById("dashboardContent");
     if (!content) return;
 
+    const isDark = document.body.classList.contains("dark-theme");
+
     content.innerHTML = `
         <div class="dashboard-welcome">
             <div>
-                <span class="section-label">SYSTEM</span>
-                <h1>Settings</h1>
+                <span class="section-label">PREFERENCES</span>
+                <h1>System Settings</h1>
+                <p>Customize system appearance, notifications, and security preferences.</p>
             </div>
         </div>
-        <div class="dashboard-card" style="max-width:550px;">
-            <p style="color:#66727f; font-size:13px;">Manage application preferences and notification options.</p>
-            <div style="margin-top:20px;">
-                <button type="button" class="dashboard-button dashboard-button-primary" onclick="showMessage('Settings saved.', 'success')">Save Preferences</button>
+
+        <div class="settings-grid">
+            <!-- 1. Appearance / Theme -->
+            <div class="dashboard-card">
+                <div class="card-header-simple">
+                    <h3>🎨 Appearance</h3>
+                    <p>Customize the look and feel of your workspace.</p>
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <strong>Dark Mode</strong>
+                        <p>Switch between light and dark visual themes</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle" ${isDark ? "checked" : ""}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 2. Notifications -->
+            <div class="dashboard-card">
+                <div class="card-header-simple">
+                    <h3>🔔 Notifications</h3>
+                    <p>Manage how you receive alerts and updates.</p>
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <strong>Email Alerts</strong>
+                        <p>Receive notifications on your registered email</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="emailNotifToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <strong>Fee & Exam Reminders</strong>
+                        <p>Get alerted about upcoming dues and schedule releases</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="remindersToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 3. Security -->
+            <div class="dashboard-card">
+                <div class="card-header-simple">
+                    <h3>🔒 Security</h3>
+                    <p>Update your credentials to keep your account safe.</p>
+                </div>
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="currPassword" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="dashboard-button dashboard-button-primary" style="margin-top:10px;">
+                        Update Password
+                    </button>
+                </form>
             </div>
         </div>
     `;
+
+    // Dark Mode Toggle Logic
+    document.getElementById("themeToggle")?.addEventListener("change", function() {
+        if (this.checked) {
+            document.body.classList.add("dark-theme");
+            localStorage.setItem("theme_preference", "dark");
+        } else {
+            document.body.classList.remove("dark-theme");
+            localStorage.setItem("theme_preference", "light");
+        }
+    });
+
+    // Password Update Demo Handler
+    document.getElementById("changePasswordForm")?.addEventListener("submit", function(e) {
+        e.preventDefault();
+        const curr = document.getElementById("currPassword").value;
+        const next = document.getElementById("newPassword").value;
+
+        if (next.length < 6) {
+            showMessage("Password must be at least 6 characters long.", "error");
+            return;
+        }
+
+        showMessage("Password updated successfully!", "success");
+        this.reset();
+    });
 }
 
 function showNotifications() {
-    showMessage("No new notifications at this time.", "info");
+    const dropdown = document.getElementById("notificationDropdown");
+    if (dropdown) {
+        dropdown.classList.toggle("hidden");
+    }
 }
+
+// സ്ക്രീനിൽ മറ്റെവിടെയെങ്കിലും ക്ലിക്ക് ചെയ്താൽ പോപ്പപ്പ് ക്ലോസ് ആകാൻ
+document.addEventListener("click", (e) => {
+    const wrapper = document.querySelector(".notification-wrapper");
+    const dropdown = document.getElementById("notificationDropdown");
+    if (dropdown && wrapper && !wrapper.contains(e.target)) {
+        dropdown.classList.add("hidden");
+    }
+});
 
 /* =====================================================
    14. SYSTEM UTILITIES & HELPERS

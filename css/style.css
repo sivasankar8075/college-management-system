@@ -1649,3 +1649,327 @@ a {
         grid-template-columns: 1fr;
     }
 }
+
+.topbar-left-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.back-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid #dfe5ea;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #4b5a68;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.back-nav-btn:hover {
+    background: #edf4fa;
+    color: #183653;
+    border-color: #cbd8e5;
+    transform: translateX(-2px);
+}
+
+
+/* Profile Picture Styles */
+.profile-pic-container {
+    position: relative;
+    width: 65px;
+    height: 65px;
+}
+
+.faculty-profile-avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+}
+
+.profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.profile-pic-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 24px;
+    height: 24px;
+    background: #183653;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
+}
+
+.profile-pic-badge:hover {
+    transform: scale(1.1);
+    background: #102a45;
+}
+
+.topbar-user .user-avatar {
+    overflow: hidden;
+}
+
+
+/* =====================================================
+   NOTIFICATION DROPDOWN STYLES
+===================================================== */
+
+.notification-wrapper {
+    position: relative;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 320px;
+    background: #ffffff;
+    border: 1px solid #dfe6ec;
+    border-radius: 14px;
+    box-shadow: 0 15px 40px rgba(24, 54, 83, 0.15);
+    z-index: 1000;
+    overflow: hidden;
+    animation: fadeInDrop 0.2s ease;
+}
+
+@keyframes fadeInDrop {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #edf1f4;
+    background: #fbfcfd;
+}
+
+.notif-header h4 {
+    color: #182230;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.notif-badge {
+    background: #edf4fa;
+    color: #183653;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+}
+
+.notif-body {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.notif-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f4f7;
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.notif-item:hover {
+    background: #f8fafc;
+}
+
+.notif-item.unread {
+    background: #f4f8fc;
+}
+
+.notif-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.notif-text strong {
+    display: block;
+    color: #263544;
+    font-size: 11px;
+}
+
+.notif-text p {
+    color: #63717e;
+    font-size: 11px;
+    line-height: 1.4;
+    margin-top: 2px;
+}
+
+.notif-text small {
+    display: block;
+    color: #929ca6;
+    font-size: 9px;
+    margin-top: 4px;
+}
+
+.notif-footer {
+    padding: 10px;
+    text-align: center;
+    border-top: 1px solid #edf1f4;
+    background: #fbfcfd;
+}
+
+.notif-footer button {
+    border: none;
+    background: transparent;
+    color: #477da9;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.notif-footer button:hover {
+    text-decoration: underline;
+}
+
+/* =====================================================
+   SETTINGS & THEME STYLES
+===================================================== */
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 20px;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #edf1f4;
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-item strong {
+    display: block;
+    font-size: 13px;
+    color: #182230;
+}
+
+.setting-item p {
+    font-size: 11px;
+    color: #6d7c8a;
+    margin-top: 2px;
+}
+
+/* Toggle Switch UI */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #183653;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* Dark Theme Variables / Overrides */
+body.dark-theme {
+    background: #0f172a;
+    color: #cbd5e1;
+}
+
+body.dark-theme .dashboard-sidebar {
+    background: #1e293b;
+    border-right-color: #334155;
+}
+
+body.dark-theme .dashboard-topbar,
+body.dark-theme .dashboard-card,
+body.dark-theme .modal-box,
+body.dark-theme .notification-dropdown {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-theme .dashboard-heading h2,
+body.dark-theme .card-header-simple h3,
+body.dark-theme .setting-item strong,
+body.dark-theme .notif-header h4 {
+    color: #f1f5f9;
+}
+
+body.dark-theme .form-group input,
+body.dark-theme .form-group select {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+body.dark-theme .nav-item {
+    color: #94a3b8;
+}
+
+body.dark-theme .nav-item:hover,
+body.dark-theme .nav-item.active {
+    background: #0f172a;
+    color: #f1f5f9;
+}
