@@ -153,3 +153,19 @@ INSERT INTO fees (student_id, total_fee, paid_amount, status) VALUES
 -- Announcements
 INSERT INTO announcements (title, category, message, author_id, published_date) VALUES
 ('Internal Examination Schedule', 'Academic', 'The internal examination schedule has been published.', 'ADM001', '2026-08-30');
+
+
+
+
+-- Users ടേബിളിലെ role-ൽ parent കൂടി ഉൾപ്പെടുത്തുക
+ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'faculty', 'student', 'parent') NOT NULL;
+
+-- Parent-നെ Student ID-യുമായി ബന്ധിപ്പിക്കുന്ന ടേബിൾ
+CREATE TABLE IF NOT EXISTS parent_student_map (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    parent_id VARCHAR(50) NOT NULL,
+    student_id VARCHAR(50) NOT NULL,
+    relation VARCHAR(20) DEFAULT 'Parent',
+    FOREIGN KEY (parent_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
+);

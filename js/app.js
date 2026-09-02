@@ -1,6 +1,6 @@
 /* =====================================================
    CAMPUSCORE - COLLEGE MANAGEMENT SYSTEM
-   Full Production JavaScript with REST API Integration
+   Full Production JavaScript with REST API Integration & Parent Portal
 ===================================================== */
 
 const API_BASE_URL = "http://localhost:8080/api";
@@ -62,7 +62,8 @@ function selectRole(role) {
     const demoCreds = {
         admin: { id: "ADM001", pwd: "admin123" },
         faculty: { id: "FAC101", pwd: "faculty123" },
-        student: { id: "STU202402", pwd: "student123" }
+        student: { id: "STU202402", pwd: "student123" },
+        parent: { id: "PAR301", pwd: "parent123" }
     };
     if (userIdInput && demoCreds[role]) userIdInput.value = demoCreds[role].id;
     if (passwordInput && demoCreds[role]) passwordInput.value = demoCreds[role].pwd;
@@ -109,6 +110,7 @@ async function loginUser() {
                 name: data.name,
                 role: data.role,
                 email: data.email,
+                wardId: data.wardId || "STU202402",
                 initials: getInitials(data.name)
             };
             appState.isLoggedIn = true;
@@ -177,15 +179,22 @@ function showRegistrationPage() {
                         <select id="registerRole">
                             <option value="student">Student</option>
                             <option value="faculty">Faculty</option>
+                            <option value="parent">Parent</option>
                         </select>
                     </div>
+
+                    <div class="form-group" id="wardIdGroup" style="display:none;">
+                        <label>Student ID (Ward's ID)</label>
+                        <input type="text" id="registerWardId" placeholder="e.g. STU202402">
+                    </div>
+
                     <div class="registration-grid">
                         <div class="form-group">
                             <label>Full Name</label>
                             <input type="text" id="registerName" placeholder="Enter full name" required>
                         </div>
                         <div class="form-group">
-                            <label>Student / Faculty ID</label>
+                            <label>User ID</label>
                             <input type="text" id="registerId" placeholder="Enter ID" required>
                         </div>
                         <div class="form-group">
@@ -196,7 +205,7 @@ function showRegistrationPage() {
                             <label>Phone Number</label>
                             <input type="tel" id="registerPhone" placeholder="Enter phone number" required>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="regDeptGroup">
                             <label>Department</label>
                             <select id="registerDepartment">
                                 <option>Computer Science</option>
@@ -206,7 +215,7 @@ function showRegistrationPage() {
                                 <option>Physics</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="regSemGroup">
                             <label>Semester / Designation</label>
                             <select id="registerSemester">
                                 <option>Semester 1</option>
@@ -235,6 +244,18 @@ function showRegistrationPage() {
             </div>
         </div>
     `;
+
+    const roleSelect = document.getElementById("registerRole");
+    const wardGroup = document.getElementById("wardIdGroup");
+    const deptGroup = document.getElementById("regDeptGroup");
+    const semGroup = document.getElementById("regSemGroup");
+
+    roleSelect?.addEventListener("change", (e) => {
+        const isParent = e.target.value === "parent";
+        if (wardGroup) wardGroup.style.display = isParent ? "block" : "none";
+        if (deptGroup) deptGroup.style.display = isParent ? "none" : "block";
+        if (semGroup) semGroup.style.display = isParent ? "none" : "block";
+    });
 
     document.getElementById("backToLogin")?.addEventListener("click", backToLogin);
     document.getElementById("registrationForm")?.addEventListener("submit", async e => {
@@ -335,6 +356,20 @@ function getPageTitle(page) {
 }
 
 function createNavigation() {
+    if (appState.selectedRole === "parent") {
+        return `
+            <div class="navigation-title">WARD OVERVIEW</div>
+            ${navItem("dashboard", "▦", "Dashboard")}
+            ${navItem("attendance", "◷", "Attendance")}
+            ${navItem("marks", "▣", "Internal Marks")}
+            ${navItem("fees", "₹", "Fee Details")}
+            <div class="navigation-title">CAMPUS</div>
+            ${navItem("announcements", "◉", "Announcements")}
+            <div class="navigation-title">ACCOUNT</div>
+            ${navItem("profile", "👤", "My Profile")}
+        `;
+    }
+
     const common = `
         <div class="navigation-title">MAIN</div>
         ${navItem("dashboard", "▦", "Dashboard")}
@@ -457,7 +492,81 @@ async function renderRoleDashboard() {
         console.warn("Backend metrics unavailable, showing cache");
     }
 
-    const user = appState.currentUser || { name: "User", role: "admin" };
+    const user = appState.currentUser || { name: "User", role: appState.selectedRole };
+
+    if (appState.selectedRole === "parent") {
+        const wardId = user.wardId || "STU202402";
+        const ward = students.find(s => s.id === wardId) || {
+            name: "Arun Kumar",
+            id: wardId,
+            department: "Computer Science",
+            semester: "Semester 5",
+            attendance: 92
+        };
+
+        content.innerHTML = `
+            <div class="dashboard-welcome">
+                <div>
+                    <h1>Welcome, ${user.name}</h1>
+                    <p>Monitoring academic progress for ward: <strong>${ward.name} (${ward.id})</strong></p>
+                </div>
+            </div>
+
+            <div class="dashboard-statistics">
+                <div class="dashboard-stat-card">
+                    <span class="stat-label">WARD ATTENDANCE</span>
+                    <div class="stat-value">${ward.attendance}%</div>
+                    <small class="stat-description">Overall Status: Excellent</small>
+                </div>
+                <div class="dashboard-stat-card">
+                    <span class="stat-label">CURRENT SEMESTER</span>
+                    <div class="stat-value">${ward.semester.replace("Semester ", "Sem ")}</div>
+                    <small class="stat-description">${ward.department}</small>
+                </div>
+                <div class="dashboard-stat-card">
+                    <span class="stat-label">ENROLLED COURSES</span>
+                    <div class="stat-value">${courses.length || 5}</div>
+                    <small class="stat-description">Academic Year 2026</small>
+                </div>
+                <div class="dashboard-stat-card">
+                    <span class="stat-label">FEE STATUS</span>
+                    <div class="stat-value" style="color:#0fa958;">Cleared</div>
+                    <small class="stat-description">No Pending Dues</small>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <h3>Ward Academic Status</h3>
+                    </div>
+                    <div class="profile-info-list" style="padding:10px 0;">
+                        <div class="profile-info-row"><span>Student Name</span><strong>${ward.name}</strong></div>
+                        <div class="profile-info-row"><span>Registration ID</span><strong>${ward.id}</strong></div>
+                        <div class="profile-info-row"><span>Department</span><strong>${ward.department}</strong></div>
+                        <div class="profile-info-row"><span>Current Academic Standing</span><strong>Good</strong></div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <h3>Quick Navigation</h3>
+                    </div>
+                    <div class="quick-actions">
+                        <button type="button" class="quick-action" data-quick="attendance"><span class="quick-action-icon">◷</span><strong>Attendance</strong></button>
+                        <button type="button" class="quick-action" data-quick="marks"><span class="quick-action-icon">▣</span><strong>Marks</strong></button>
+                        <button type="button" class="quick-action" data-quick="fees"><span class="quick-action-icon">₹</span><strong>Fee Dues</strong></button>
+                        <button type="button" class="quick-action" data-quick="announcements"><span class="quick-action-icon">◉</span><strong>Notices</strong></button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.querySelectorAll("[data-quick]").forEach(b => {
+            b.addEventListener("click", () => navigateTo(b.dataset.quick));
+        });
+        return;
+    }
 
     content.innerHTML = `
         <div class="dashboard-welcome">
@@ -1173,6 +1282,58 @@ async function showAttendancePage() {
     const content = document.getElementById("dashboardContent");
     if (!content) return;
 
+    if (appState.selectedRole === "parent") {
+        const wardId = appState.currentUser?.wardId || "STU202402";
+        const ward = students.find(s => s.id === wardId) || { name: "Arun Kumar", id: wardId, attendance: 92 };
+
+        content.innerHTML = `
+            <div class="dashboard-welcome">
+                <div>
+                    <span class="section-label">ATTENDANCE REPORT</span>
+                    <h1>Ward Attendance Tracking</h1>
+                    <p>Detailed subject-wise attendance history for <strong>${ward.name} (${ward.id})</strong>.</p>
+                </div>
+            </div>
+
+            <div class="faculty-summary">
+                <div class="faculty-summary-card"><span>TOTAL ATTENDANCE</span><strong>${ward.attendance}%</strong></div>
+                <div class="faculty-summary-card"><span>CLASSES CONDUCTED</span><strong>180</strong></div>
+                <div class="faculty-summary-card"><span>CLASSES ATTENDED</span><strong>165</strong></div>
+                <div class="faculty-summary-card"><span>ELIGIBILITY</span><strong>Eligible (≥75%)</strong></div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="student-table-wrapper">
+                    <table class="student-table">
+                        <thead>
+                            <tr>
+                                <th>COURSE CODE</th>
+                                <th>COURSE NAME</th>
+                                <th>TOTAL HOURS</th>
+                                <th>ATTENDED</th>
+                                <th>PERCENTAGE</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${courses.map(c => `
+                                <tr>
+                                    <td><span class="course-code">${c.code}</span></td>
+                                    <td><strong>${c.name}</strong></td>
+                                    <td>45</td>
+                                    <td>41</td>
+                                    <td><strong>91%</strong></td>
+                                    <td><span class="status-badge">Normal</span></td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
     content.innerHTML = `
         <div class="dashboard-welcome">
             <div>
@@ -1267,6 +1428,51 @@ async function showMarksPage() {
     const content = document.getElementById("dashboardContent");
     if (!content) return;
 
+    if (appState.selectedRole === "parent") {
+        const wardId = appState.currentUser?.wardId || "STU202402";
+        const ward = students.find(s => s.id === wardId) || { name: "Arun Kumar", id: wardId };
+
+        content.innerHTML = `
+            <div class="dashboard-welcome">
+                <div>
+                    <span class="section-label">PERFORMANCE OVERVIEW</span>
+                    <h1>Ward Internal Assessment</h1>
+                    <p>Continuous evaluation marks for <strong>${ward.name} (${ward.id})</strong>.</p>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="student-table-wrapper">
+                    <table class="student-table">
+                        <thead>
+                            <tr>
+                                <th>COURSE CODE</th>
+                                <th>COURSE NAME</th>
+                                <th>INTERNAL 1 (20)</th>
+                                <th>INTERNAL 2 (20)</th>
+                                <th>ASSIGNMENT (10)</th>
+                                <th>TOTAL (50)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${courses.map(c => `
+                                <tr>
+                                    <td><span class="course-code">${c.code}</span></td>
+                                    <td><strong>${c.name}</strong></td>
+                                    <td>18</td>
+                                    <td>17</td>
+                                    <td>9</td>
+                                    <td><strong>44 / 50</strong></td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
     content.innerHTML = `
         <div class="dashboard-welcome">
             <div>
@@ -1331,6 +1537,67 @@ async function showFeesPage() {
 
     const content = document.getElementById("dashboardContent");
     if (!content) return;
+
+    if (appState.selectedRole === "parent") {
+        const wardId = appState.currentUser?.wardId || "STU202402";
+        const fee = feeRecords.find(f => f.studentId === wardId) || {
+            studentName: "Arun Kumar",
+            studentId: wardId,
+            department: "Computer Science",
+            totalFee: 45000,
+            paid: 45000,
+            status: "Paid"
+        };
+        const balance = Number(fee.totalFee) - Number(fee.paid);
+
+        content.innerHTML = `
+            <div class="dashboard-welcome">
+                <div>
+                    <span class="section-label">FINANCE</span>
+                    <h1>Fee Dues & Payment Status</h1>
+                    <p>Fee settlement records for <strong>${fee.studentName} (${fee.studentId})</strong>.</p>
+                </div>
+            </div>
+
+            <div class="faculty-summary">
+                <div class="faculty-summary-card"><span>TOTAL ACADEMIC FEE</span><strong>₹${Number(fee.totalFee).toLocaleString("en-IN")}</strong></div>
+                <div class="faculty-summary-card"><span>PAID AMOUNT</span><strong>₹${Number(fee.paid).toLocaleString("en-IN")}</strong></div>
+                <div class="faculty-summary-card"><span>BALANCE OUTSTANDING</span><strong>₹${balance.toLocaleString("en-IN")}</strong></div>
+                <div class="faculty-summary-card"><span>PAYMENT STATUS</span><strong>${fee.status}</strong></div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h3>Recent Fee Transactions</h3>
+                </div>
+                <div class="student-table-wrapper">
+                    <table class="student-table">
+                        <thead>
+                            <tr>
+                                <th>RECEIPT NO</th>
+                                <th>DESCRIPTION</th>
+                                <th>PAID ON</th>
+                                <th>AMOUNT</th>
+                                <th>MODE</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="student-id">REC-2026-991</span></td>
+                                <td>Semester 5 Tuition & Lab Fee</td>
+                                <td>15 Jan 2026</td>
+                                <td>₹${Number(fee.paid).toLocaleString("en-IN")}</td>
+                                <td>UPI / Online</td>
+                                <td><span class="status-badge">Success</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        return;
+    }
 
     const collected = feeRecords.reduce((s, f) => s + Number(f.paid || 0), 0);
     const total = feeRecords.reduce((s, f) => s + Number(f.totalFee || 0), 0);
@@ -1560,7 +1827,7 @@ async function showReportsPage() {
 function showProfilePage() {
     const content = document.getElementById("dashboardContent");
     if (!content) return;
-    const user = appState.currentUser || { name: "Administrator", role: "admin", email: "admin@campuscore.edu" };
+    const user = appState.currentUser || { name: "Administrator", role: appState.selectedRole, email: "user@campuscore.edu" };
 
     content.innerHTML = `
         <div class="dashboard-welcome">
@@ -1578,9 +1845,10 @@ function showProfilePage() {
                 </div>
             </div>
             <div class="profile-info-list">
-                <div class="profile-info-row"><span>User ID</span><strong>${user.userId || "ADM001"}</strong></div>
-                <div class="profile-info-row"><span>Email</span><strong>${user.email || "admin@campuscore.edu"}</strong></div>
+                <div class="profile-info-row"><span>User ID</span><strong>${user.userId || "PAR301"}</strong></div>
+                <div class="profile-info-row"><span>Email</span><strong>${user.email || "parent@campuscore.edu"}</strong></div>
                 <div class="profile-info-row"><span>Role</span><strong>${user.role}</strong></div>
+                ${user.wardId ? `<div class="profile-info-row"><span>Linked Ward ID</span><strong>${user.wardId}</strong></div>` : ""}
             </div>
         </div>
     `;

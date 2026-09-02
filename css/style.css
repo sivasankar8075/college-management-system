@@ -271,11 +271,11 @@ a {
     line-height: 1.6;
 }
 
-/* Role Selector */
+/* Role Selector (Updated to 4 columns for Admin, Faculty, Student, Parent) */
 
 .role-selector {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 4px;
     padding: 4px;
     margin-bottom: 25px;
@@ -287,13 +287,13 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    padding: 10px 5px;
+    gap: 6px;
+    padding: 10px 4px;
     border: none;
     border-radius: 9px;
     background: transparent;
     color: #7c8794;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     transition: all 0.2s ease;
 }
@@ -1626,6 +1626,10 @@ a {
     }
     .quick-actions {
         grid-template-columns: repeat(2, 1fr);
+    }
+    .role-selector {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
     }
     .user-details {
         display: none;
